@@ -309,7 +309,7 @@
   };
   const styles = document.createElement("link");
   styles.rel = "stylesheet";
-  styles.href = "assets/jarred-portfolio.css";
+    styles.href = "assets/jarred-portfolio.css?v=20261011-beams3";
   document.head.append(styles);
   let booted = false;
   const boot = () => {
