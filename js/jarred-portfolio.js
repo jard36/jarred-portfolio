@@ -98,11 +98,11 @@
     document.body.append(overlay);
   };
   const hideLoadingScreen = () => document.getElementById("jarred-loading-screen")?.remove();
-  const mountBeamBackground = (hero) => {
-    if (!hero || hero.querySelector(".jarred-beam-stage")) return;
-    hero.classList.add("jarred-beam-hero");
+  const mountBeamBackground = () => {
+    if (document.getElementById("jarred-beam-stage")) return;
     const stage = element("div", "jarred-beam-stage");
     stage.id = "jarred-beam-stage";
+    stage.classList.add("jarred-beam-global");
     stage.setAttribute("aria-hidden", "true");
     const beams = [
       [8, 7, -1, 42], [24, 4, -2.5, 68], [39, 8, -5, 54], [56, 5, -1.5, 82],
@@ -117,10 +117,7 @@
       stage.append(beam);
     });
     stage.append(element("span", "jarred-beam-floor"));
-    hero.prepend(stage);
-    [...hero.children].forEach((child) => {
-      if (child !== stage && getComputedStyle(child).position === "static") child.classList.add("jarred-beam-content");
-    });
+    document.body.append(stage);
     let burstIndex = 0;
     let burstTimer;
     const emitBurst = () => {
@@ -200,6 +197,7 @@
   };
   const customizePortfolio = () => {
     const page = currentPage();
+    if (page !== "404") mountBeamBackground();
     const home = page === "index";
     const projectPage = page === "services";
     if (home) {
@@ -217,7 +215,6 @@
           img.parentElement?.querySelector('div[style*="grid-template-rows"]')?.remove();
         }
       });
-      mountBeamBackground(hero);
       updateStats();
     }
     if (home || projectPage) {
