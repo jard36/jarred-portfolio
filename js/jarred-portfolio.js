@@ -66,7 +66,7 @@
     return ["index", "contact", "services", "404"].includes(page) ? page : "index";
   };
   const pageIsCustomized = (page) => {
-    if (page === "index") return Boolean(document.querySelector(".jarred-name"));
+    if (page === "index") return Boolean(document.querySelector(".jarred-name") && document.querySelector(".jarred-beam-stage"));
     if (page === "contact") return Boolean(document.querySelector(".jarred-contact-grid"));
     if (page === "services") return Boolean(document.querySelector(".jarred-showcase-card"));
     return true;
@@ -98,6 +98,50 @@
     document.body.append(overlay);
   };
   const hideLoadingScreen = () => document.getElementById("jarred-loading-screen")?.remove();
+  const mountBeamBackground = (hero) => {
+    if (!hero || hero.querySelector(".jarred-beam-stage")) return;
+    hero.classList.add("jarred-beam-hero");
+    const stage = element("div", "jarred-beam-stage");
+    stage.id = "jarred-beam-stage";
+    stage.setAttribute("aria-hidden", "true");
+    const beams = [
+      [8, 7, -1, 42], [24, 4, -2.5, 68], [39, 8, -5, 54], [56, 5, -1.5, 82],
+      [72, 10, -7, 58], [86, 4.5, -3, 72], [95, 6.5, -4.5, 44]
+    ];
+    beams.forEach(([left, duration, delay, height]) => {
+      const beam = element("span", "jarred-beam");
+      beam.style.setProperty("--beam-left", `${left}%`);
+      beam.style.setProperty("--beam-duration", `${duration}s`);
+      beam.style.setProperty("--beam-delay", `${delay}s`);
+      beam.style.setProperty("--beam-height", `${height}px`);
+      stage.append(beam);
+    });
+    stage.append(element("span", "jarred-beam-floor"));
+    hero.prepend(stage);
+    [...hero.children].forEach((child) => {
+      if (child !== stage && getComputedStyle(child).position === "static") child.classList.add("jarred-beam-content");
+    });
+    let burstIndex = 0;
+    let burstTimer;
+    const emitBurst = () => {
+      if (!stage.isConnected) {
+        window.clearInterval(burstTimer);
+        return;
+      }
+      const burst = element("span", "jarred-beam-burst");
+      burst.style.setProperty("--burst-left", `${beams[burstIndex++ % beams.length][0]}%`);
+      for (let index = 0; index < 12; index += 1) {
+        const particle = element("i", "jarred-beam-particle");
+        particle.style.setProperty("--particle-angle", `${index * 30 + 5}deg`);
+        particle.style.setProperty("--particle-distance", `${18 + (index % 4) * 8}px`);
+        burst.append(particle);
+      }
+      stage.append(burst);
+      window.setTimeout(() => burst.remove(), 1100);
+    };
+    window.setTimeout(emitBurst, 900);
+    burstTimer = window.setInterval(emitBurst, 2600);
+  };
   const applySharedContent = () => {
     document.querySelectorAll('[data-framer-name="Services"]').forEach(hidden);
     document.querySelectorAll('a[href*="services"]').forEach((a) => hidden(a.closest('[class*="-container"]') || a));
@@ -170,8 +214,10 @@
         if (/Nandi/i.test(img.alt) || /Untitled design|payable-webapp/i.test(img.getAttribute("src") || "")) {
           img.src = profileImage;
           img.alt = "Jarred Encabo profile photo";
+          img.parentElement?.querySelector('div[style*="grid-template-rows"]')?.remove();
         }
       });
+      mountBeamBackground(hero);
       updateStats();
     }
     if (home || projectPage) {
