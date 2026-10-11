@@ -59,7 +59,12 @@
       a.rel = "noopener noreferrer";
     });
   };
-  const currentPage = () => location.pathname.replace(/\/+$/, "").replace(/\.html$/, "").split("/").pop() || "index";
+  const currentPage = () => {
+    const path = location.pathname.replace(/\/+$/, "");
+    const last = path.split("/").pop() || "";
+    const page = last.replace(/\.html$/i, "").toLowerCase();
+    return ["index", "contact", "services", "404"].includes(page) ? page : "index";
+  };
   const pageIsCustomized = (page) => {
     if (page === "index") return Boolean(document.querySelector(".jarred-name"));
     if (page === "contact") return Boolean(document.querySelector(".jarred-contact-grid"));
@@ -73,6 +78,26 @@
       if (p.textContent.trim()) p.textContent = description;
     });
   };
+  const showLoadingScreen = () => {
+    if (currentPage() !== "index" || document.getElementById("jarred-loading-screen")) return;
+    const overlay = element("div", "jarred-loading-screen");
+    overlay.id = "jarred-loading-screen";
+    const card = element("div", "jarred-loading-card");
+    const image = document.createElement("img");
+    image.src = profileImage;
+    image.alt = `${profile.name} profile photo`;
+    card.append(image, element("p", "jarred-loading-eyebrow", "Available For Work"), element("h1", "jarred-loading-name", profile.name), element("p", "jarred-loading-bio", profile.bio));
+    const stats = element("div", "jarred-loading-stats");
+    [["10+", "Happy Clients"], ["2+", "Years of Experience"], ["6+", "Completed Tasks"], ["5", "Awards Received"]].forEach(([value, label]) => {
+      const item = element("div", "jarred-loading-stat");
+      item.append(element("strong", "jarred-loading-value", value), element("span", "jarred-loading-label", label));
+      stats.append(item);
+    });
+    card.append(stats);
+    overlay.append(card);
+    document.body.append(overlay);
+  };
+  const hideLoadingScreen = () => document.getElementById("jarred-loading-screen")?.remove();
   const applySharedContent = () => {
     document.querySelectorAll('[data-framer-name="Services"]').forEach(hidden);
     document.querySelectorAll('a[href*="services"]').forEach((a) => hidden(a.closest('[class*="-container"]') || a));
@@ -81,10 +106,11 @@
       if (section.querySelector('[data-framer-name="Logo"]')) hidden(section.closest('[data-framer-name="Container"]') || section);
     });
     updateEmailLinks();
-    document.querySelectorAll('a[href$="contact.html"]').forEach((a) => a.setAttribute("href", "contact.html"));
     document.querySelectorAll("a[href]").forEach((a) => {
       const label = a.textContent.trim().replace(/\s+/g, " ");
       const href = a.getAttribute("href") || "";
+      if (/^home$/i.test(label) || /(?:^|\/)index(?:\.html)?(?:[/?#]|$)/i.test(href)) a.setAttribute("href", "index.html");
+      if (/^contact$/i.test(label) || /(?:^|\/)contact(?:\.html)?(?:[/?#]|$)/i.test(href)) a.setAttribute("href", "contact.html");
       if (/instagram\.com/i.test(href)) {
         a.href = profile.instagram;
         a.target = "_blank";
@@ -243,8 +269,12 @@
   const boot = () => {
     if (booted) return;
     booted = true;
-    run();
-    updateStats();
+    try {
+      run();
+      updateStats();
+    } finally {
+      hideLoadingScreen();
+    }
   };
   const runAfterHydration = () => window.setTimeout(boot, 1800);
   const scheduleRouteRun = () => {
@@ -269,4 +299,5 @@
   }, 250);
   if (document.readyState === "complete") runAfterHydration();
   else window.addEventListener("load", runAfterHydration, { once: true });
+  showLoadingScreen();
 })();
