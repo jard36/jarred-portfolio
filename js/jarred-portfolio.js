@@ -155,7 +155,7 @@
     });
   };
   const customizePortfolio = () => {
-    const page = location.pathname.replace(/\/+$/, "").replace(/\.html$/, "").split("/").pop() || "index";
+    const page = currentPage();
     const home = page === "index";
     const projectPage = page === "services";
     if (home) {
@@ -251,7 +251,6 @@
   const run = () => {
     const page = currentPage();
     if (document.body.dataset.jarredPortfolioApplied === page && pageIsCustomized(page)) return;
-    document.body.dataset.jarredPortfolioApplied = page;
     applySharedContent();
     customizePortfolio();
     updateSocialLinks();
@@ -260,6 +259,10 @@
     document.title = page === "contact" ? "Contact | Jarred Encabo" : page === "services" ? "Projects | Jarred Encabo" : page === "404" ? "Page not found | Jarred Encabo" : "Jarred Encabo | Full Stack Developer";
     const description = document.querySelector('meta[name="description"]');
     if (description) description.content = profile.bio;
+    if (pageIsCustomized(page)) {
+      document.body.dataset.jarredPortfolioApplied = page;
+      hideLoadingScreen();
+    }
   };
   const styles = document.createElement("link");
   styles.rel = "stylesheet";
@@ -273,7 +276,7 @@
       run();
       updateStats();
     } finally {
-      hideLoadingScreen();
+      if (pageIsCustomized(currentPage())) hideLoadingScreen();
     }
   };
   const runAfterHydration = () => window.setTimeout(boot, 1800);
